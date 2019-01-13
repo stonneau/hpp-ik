@@ -34,26 +34,26 @@ namespace hpp {
 namespace ik {
 
 
-void AddPosConstraint  (IkHelper& ikHelper, const FrameMarker& frameMarker, const vector3_t    & positionTarget);
-void AddRotConstraint  (IkHelper& ikHelper, const FrameMarker& frameMarker, const fcl::Matrix3f& rotationTarget);
-void AddCOMConstraint  (IkHelper& ikHelper, const vector3_t  & positionTarget);
+void HPP_IK_DLLAPI AddPosConstraint  (IkHelper& ikHelper, const pinocchio::Frame &frame, const vector3_t    & positionTarget);
+void HPP_IK_DLLAPI AddRotConstraint  (IkHelper& ikHelper, const pinocchio::Frame& frameMarker, const fcl::Matrix3f& rotationTarget);
+void HPP_IK_DLLAPI AddCOMConstraint  (IkHelper& ikHelper, const vector3_t  & positionTarget);
 
-fcl::Transform3f computeProjectionMatrix(const FrameMarker& frameMarker, const pos_norm& positionNormal);
+fcl::Transform3f HPP_IK_DLLAPI computeProjectionMatrix(const FrameMarker& frameMarker, const vector3_t &posTarget, const vector3_t &normTarget);
 
 
 template<>
 inline void HPP_IK_DLLAPI AddConstraint<MAINTAIN_3D>
 (IkHelper& ikHelper, const FrameMarker& frame)
 {
-    hpp::ik::AddPosConstraint(ikHelper,frame,frame.frame_.currentTransformation().translation());
+    hpp::ik::AddPosConstraint(ikHelper,frame.frame_,frame.frame_.currentTransformation().translation());
 }
 
 template<>
 inline void HPP_IK_DLLAPI AddConstraint<MAINTAIN_6D>
 (IkHelper& ikHelper, const FrameMarker& frame)
 {
-    hpp::ik::AddPosConstraint(ikHelper,frame,frame.frame_.currentTransformation().translation());
-    hpp::ik::AddRotConstraint(ikHelper,frame,frame.frame_.currentTransformation().rotation());
+    hpp::ik::AddPosConstraint(ikHelper,frame.frame_,frame.frame_.currentTransformation().translation());
+    hpp::ik::AddRotConstraint(ikHelper,frame.frame_,frame.frame_.currentTransformation().rotation());
 }
 
 template<>
@@ -64,26 +64,28 @@ inline void HPP_IK_DLLAPI AddConstraint<MAINTAIN_COM>(IkHelper& ikHelper)
 
 template<>
 inline void HPP_IK_DLLAPI AddConstraint<TARGET_3D>
-(IkHelper& ikHelper, const FrameMarker& frame, const vector3_t& target)
+(IkHelper& ikHelper, const pinocchio::Frame& frame, const vector3_t& target)
 {
     hpp::ik::AddPosConstraint(ikHelper, frame, target);
 }
 
 template<>
 inline void HPP_IK_DLLAPI AddConstraint<TARGET_POS_NORM>
-(IkHelper& ikHelper, const FrameMarker& frame, const pos_norm& positionNormal)
+(IkHelper& ikHelper, const FrameMarker& frame, const vector3_t& posTarget, const vector3_t& normTarget)
 {
-    fcl::Transform3f pM = hpp::ik::computeProjectionMatrix(frame,positionNormal);
-    hpp::ik::AddPosConstraint(ikHelper, frame, pM.getTranslation());
-    hpp::ik::AddRotConstraint(ikHelper, frame, pM.getRotation());
+    fcl::Transform3f pM = hpp::ik::computeProjectionMatrix(frame,posTarget, normTarget);
+    hpp::ik::AddPosConstraint(ikHelper, frame.frame_, pM.getTranslation());
+    hpp::ik::AddRotConstraint(ikHelper, frame.frame_, pM.getRotation());
 }
 
 template<>
 inline void HPP_IK_DLLAPI AddConstraint<TARGET_6D>
-(IkHelper& ikHelper, const FrameMarker& frame, const pos_quat& target)
+(IkHelper& ikHelper, const FrameMarker& frameMarker, const vector3_t& posTarget, const quat_t& quatTarget)
 {
-    hpp::ik::AddPosConstraint(ikHelper, frame, target.head<3>());
-    hpp::ik::AddRotConstraint(ikHelper, frame, Eigen::Quaterniond(target.tail<4>()).toRotationMatrix());
+    fcl::Matrix3f rotation = quatTarget.toRotationMatrix();
+    fcl::Vec3f posOffset = posTarget - rotation * frameMarker.offset_;
+    hpp::ik::AddPosConstraint(ikHelper, frameMarker.frame_, posOffset);
+    hpp::ik::AddRotConstraint(ikHelper, frameMarker.frame_, rotation);
 }
 
 template<>

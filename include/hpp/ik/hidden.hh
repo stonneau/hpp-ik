@@ -47,15 +47,15 @@ void HPP_IK_DLLAPI AddConstraint
 
 template<IkConstraintType E>
 void HPP_IK_DLLAPI AddConstraint
-(IkHelper& ikHelper, const FrameMarker& frame, const vector3_t& target);
+(IkHelper& ikHelper, const pinocchio::Frame& frame, const vector3_t& target);
 
 template<IkConstraintType E>
 void HPP_IK_DLLAPI AddConstraint
-(IkHelper& ikHelper, const FrameMarker& frame, const pos_norm& target);
+(IkHelper& ikHelper, const FrameMarker& frame, const vector3_t& posTarget, const vector3_t& normTarget);
 
 template<IkConstraintType E>
 void HPP_IK_DLLAPI AddConstraint
-(IkHelper& ikHelper, const FrameMarker& frame, const pos_quat& target);
+(IkHelper& ikHelper, const FrameMarker& frame, const vector3_t& posTarget, const quat_t& quatTarget);
 
 
 } // namespace hpp

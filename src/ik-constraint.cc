@@ -34,33 +34,12 @@ std::vector<bool> setTranslationConstraints()
 
 Eigen::Matrix3d GetRotationMatrix(const Eigen::Vector3d &from, const Eigen::Vector3d &to)
 {
-    Eigen::Vector3d u, v, uXv;
-    Eigen::Vector3d  a;
-    u = from; u.normalize();
-    v = to  ; v.normalize();
-    uXv = u.cross(v);
-    Eigen::Matrix3d I = Eigen::Matrix3d::Identity();
-    double sinTheta = uXv.norm();
-    if (sinTheta < std::numeric_limits<double>::epsilon()) // angle is 0
-    {
-        return I;
-    }
-    else
-    {
-        double cosTheta = u.dot(v);
-        a = uXv / sinTheta;
-        Eigen::Matrix3d Iaaa;
-        Iaaa(0,1) = 0     ; Iaaa(0,1) = -a[2]; Iaaa(0,2) =  a[1]; //  0  -z   y
-        Iaaa(1,0) =  a[2] ; Iaaa(1,0) = 0    ; Iaaa(1,2) = -a[0]; //  z   0  -x
-        Iaaa(2,0) = -a[1] ; Iaaa(2,1) = a[0] ; Iaaa(2,2) =  0; // -y   x   0
-
-        return I * cosTheta + sinTheta * Iaaa + (1 - cosTheta) * (a*a.transpose());
-    }
+    Eigen::Quaterniond quat; quat.setFromTwoVectors(from, to);
+    return quat.toRotationMatrix();
 }
 
-void AddPosConstraint(IkHelper& ikHelper, const FrameMarker& frameMarker, const vector3_t& positionTarget)
+void AddPosConstraint(IkHelper& ikHelper, const pinocchio::Frame& effectorFrame, const vector3_t& positionTarget)
 {
-    const pinocchio::Frame& effectorFrame = frameMarker.frame_;
     pinocchio::JointPtr_t effectorJoint = effectorFrame.joint();
     pinocchio::Transform3f localFrame(1), globalFrame(1);
     globalFrame.translation(positionTarget);
@@ -71,9 +50,8 @@ void AddPosConstraint(IkHelper& ikHelper, const FrameMarker& frameMarker, const 
                                                                            setTranslationConstraints())));
 }
 
-void AddRotConstraint(IkHelper& ikHelper, const FrameMarker& frameMarker, const fcl::Matrix3f& rotationTarget)
+void AddRotConstraint(IkHelper& ikHelper, const pinocchio::Frame& effectorFrame, const fcl::Matrix3f& rotationTarget)
 {
-    const pinocchio::Frame& effectorFrame = frameMarker.frame_;
     pinocchio::JointPtr_t effectorJoint = effectorFrame.joint();
     pinocchio::Transform3f rotation(1);
     rotation.rotation(rotationTarget * effectorFrame.pinocchio().placement.rotation().transpose());
@@ -103,14 +81,8 @@ void AddCOMConstraint  (IkHelper& ikHelper, const vector3_t  & positionTarget)
 }
 
 fcl::Transform3f computeProjectionMatrix(const FrameMarker& frameMarker,
-                                         const pos_norm& positionNormal)
+                                         const vector3_t& position, const vector3_t& normal)
 {
-    fcl::Vec3f position(positionNormal.head<3>());
-    fcl::Vec3f normal(positionNormal.tail<3>());
-    // device alwas assumed to be updated
-    /*ikHelper.device_->currentConfiguration(configuration);
-    ikHelper.device_->computeForwardKinematics();*/
-    // the normal is given by the normal of the contacted object
     const fcl::Vec3f z = frameMarker.frame_.currentTransformation().rotation() * frameMarker.normal_;
     const fcl::Matrix3f alignRotation = GetRotationMatrix(z,normal);
     hppDout(notice,"alignRotation : \n"<<alignRotation);

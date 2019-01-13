@@ -35,6 +35,7 @@ namespace ik {
 typedef Eigen::Matrix <double, Eigen::Dynamic, 1> vector_t;
 typedef Eigen::Ref <const vector_t> vector_t_ref;
 typedef Eigen::Vector3d vector3_t;
+typedef Eigen::Quaterniond quat_t;
 typedef Eigen::Matrix<double, 6, 1, 0, 6, 1> pos_norm;
 // first position, then quaternion with eigen internal order x y z w
 typedef Eigen::Matrix<double, 7, 1, 0, 7, 1> pos_quat;
@@ -53,9 +54,9 @@ enum HPP_IK_DLLAPI IkConstraintType
 
 struct HPP_IK_DLLAPI IkHelper{
 
-    IkHelper(hpp::pinocchio::DevicePtr_t device)
+    IkHelper(hpp::pinocchio::DevicePtr_t device, const double tolerance = 1e-5)
     : device_(device)
-    , proj_(core::ConfigProjector::create(device, "proj", 1e-4, 40 ))
+    , proj_(core::ConfigProjector::create(device, "proj", tolerance, 40 ))
     {
         device_->controlComputation(pinocchio::Computation_t(device_->computationFlag()
                                         | pinocchio::JOINT_POSITION | pinocchio::JACOBIAN | pinocchio::COM));
