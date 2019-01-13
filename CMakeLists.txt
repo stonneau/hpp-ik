@@ -24,6 +24,7 @@ INCLUDE(cmake/hpp.cmake)
 INCLUDE(cmake/boost.cmake)
 INCLUDE(cmake/eigen.cmake)
 INCLUDE(cmake/test.cmake)
+INCLUDE(cmake/python.cmake)
 
 SET(PROJECT_NAME hpp-ik)
 SET(PROJECT_DESCRIPTION
@@ -38,13 +39,6 @@ SET(${PROJECT_NAME}_HEADERS
   include/hpp/ik/hidden.hh
   include/hpp/ik/ik-constraint.hh
 )
-
-# Activate hpp-util logging if requested
-SET (HPP_CONSTRAINTS_NUMERIC_DEBUG ${HPP_DEBUG} CACHE BOOL "trigger hpp-util debug output")
-IF (HPP_CONSTRAINTS_NUMERIC_DEBUG)
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHPP_IK_NUMERIC_DEBUG")
-ENDIF()
-
 
 SETUP_HPP_PROJECT()
 
@@ -63,6 +57,20 @@ IF (RUN_TESTS)
   SEARCH_FOR_BOOST()
   ADD_SUBDIRECTORY(tests)
 ENDIF ()
+
+OPTION (BUILD_PYTHON_INTERFACE "Build the python binding" ON)
+IF(BUILD_PYTHON_INTERFACE)
+# search for python
+        FINDPYTHON(2.7 REQUIRED)
+        find_package( PythonLibs 2.7 REQUIRED )
+        include_directories( ${PYTHON_INCLUDE_DIRS} )
+
+        find_package( Boost COMPONENTS python REQUIRED )
+        include_directories( ${Boost_INCLUDE_DIR} )
+
+        add_subdirectory (python)
+
+ENDIF(BUILD_PYTHON_INTERFACE)
 
 PKG_CONFIG_APPEND_LIBS("hpp-ik")
 
