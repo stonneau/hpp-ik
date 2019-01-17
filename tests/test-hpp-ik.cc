@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE (test_3D_target_constraint)
     fcl::Vec3f cPos  = fm1.frame_.currentTransformation().translation();
     Eigen::Quaterniond quat(fm1.frame_.currentTransformation().rotation());
     fcl::Vec3f targetPos = cPos + fcl::Vec3f(0.1,0.5,0.03);
-    AddConstraint<TARGET_3D>(ikHelper,fm1.frame_,targetPos);
+    AddConstraint(ikHelper,fm1.frame_,targetPos);
     pinocchio::Configuration_t configuration = hyq->currentConfiguration();
     BOOST_CHECK_EQUAL(ikHelper.proj_->apply(configuration), true);
     hyq->currentConfiguration(configuration); hyq->computeForwardKinematics();
@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE (test_pos_normal_constraint)
     Eigen::Quaterniond quat(fm1.frame_.currentTransformation().rotation());
     fcl::Vec3f targetPos = cPos + fcl::Vec3f(0.1,0.0,0.03);
     fcl::Vec3f normal(1,0.,0.); normal.normalize();
-    AddConstraint<TARGET_POS_NORM>(ikHelper,fm1,targetPos, normal);
+    AddConstraint(ikHelper,fm1,targetPos, normal);
     pinocchio::Configuration_t configuration = hyq->currentConfiguration();
     BOOST_CHECK_EQUAL(ikHelper.proj_->apply(configuration), true);
     hyq->currentConfiguration(configuration); hyq->computeForwardKinematics();
@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE (test_6D_target_constraint)
     fcl::Vec3f cPos  = fm1.frame_.currentTransformation().translation();
     fcl::Vec3f targetPos = cPos + fcl::Vec3f(0.1,0.5,0.03);;
     Eigen::Quaterniond quat(fm1.frame_.currentTransformation().rotation());
-    AddConstraint<TARGET_6D>(ikHelper,fm1,targetPos, quat);
+    AddConstraint(ikHelper,fm1,targetPos, quat);
     pinocchio::Configuration_t configuration = hyq->currentConfiguration();
     BOOST_CHECK_EQUAL(ikHelper.proj_->apply(configuration), true);
     hyq->currentConfiguration(configuration); hyq->computeForwardKinematics();
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE (test_3D_maintain_constraint)
     fcl::Vec3f cPos  = fm1.frame_.currentTransformation().translation();
     fcl::Vec3f cPos2 = fm2.frame_.currentTransformation().translation();
     fcl::Vec3f targetPos = cPos + fcl::Vec3f(0.,0.,0.03);
-    AddConstraint<TARGET_3D>(ikHelper,fm1.frame_,targetPos);
+    AddConstraint(ikHelper,fm1.frame_,targetPos);
     pinocchio::Configuration_t configuration = hyq->currentConfiguration();
     pinocchio::Configuration_t targetconfiguration = configuration;
     BOOST_CHECK_EQUAL(ikHelper.proj_->apply(targetconfiguration), true);
@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE (test_3D_maintain_constraint)
 
     // adding maintain constraint
     hyq->currentConfiguration(configuration); hyq->computeForwardKinematics();
-    AddConstraint<MAINTAIN_3D>(ikHelper,fm2);
+    AddMaintainConstraint<MAINTAIN_3D>(ikHelper,fm2);
     BOOST_CHECK_EQUAL(ikHelper.proj_->apply(targetconfiguration), true);
     hyq->currentConfiguration(targetconfiguration); hyq->computeForwardKinematics();
     BOOST_CHECK((fm1.frame_.currentTransformation().translation() - targetPos).norm() < epsilon);
@@ -159,7 +159,7 @@ BOOST_AUTO_TEST_CASE (test_6D_maintain_constraint)
     fcl::Vec3f cPos2 = fm2.frame_.currentTransformation().translation();
     Eigen::Quaterniond quat2(fm2.frame_.currentTransformation().rotation());
     fcl::Vec3f targetPos = cPos + fcl::Vec3f(0.1,0.5,0.03);
-    AddConstraint<TARGET_3D>(ikHelper,fm1.frame_,targetPos);
+    AddConstraint(ikHelper,fm1.frame_,targetPos);
     pinocchio::Configuration_t configuration = hyq->currentConfiguration();
     pinocchio::Configuration_t targetconfiguration = configuration;
     BOOST_CHECK_EQUAL(ikHelper.proj_->apply(targetconfiguration), true);
@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE (test_6D_maintain_constraint)
 
     // adding maintain constraint
     hyq->currentConfiguration(configuration); hyq->computeForwardKinematics();
-    AddConstraint<MAINTAIN_6D>(ikHelper,fm2);
+    AddMaintainConstraint<MAINTAIN_6D>(ikHelper,fm2);
     BOOST_CHECK_EQUAL(ikHelper.proj_->apply(targetconfiguration), true);
     hyq->currentConfiguration(targetconfiguration); hyq->computeForwardKinematics();
     BOOST_CHECK((fm1.frame_.currentTransformation().translation() - targetPos).norm() < epsilon);
@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE (test_COM_target_constraint)
     IkHelper ikHelper(hyq);
 
     fcl::Vec3f targetPos(0.,0.,1.);
-    AddConstraint<TARGET_COM>(ikHelper,targetPos);
+    AddCOMConstraint(ikHelper,targetPos);
     pinocchio::Configuration_t configuration = hyq->currentConfiguration();
     pinocchio::Configuration_t targetconfiguration = configuration;
     BOOST_CHECK_EQUAL(ikHelper.proj_->apply(targetconfiguration), true);
@@ -206,8 +206,8 @@ BOOST_AUTO_TEST_CASE (test_COM_Maintain)
     Eigen::Quaterniond quat(fm1.frame_.currentTransformation().rotation());
     fcl::Vec3f targetPos = cPos + fcl::Vec3f(0.1,0.,0.03);
     fcl::Vec3f currentCom = hyq->positionCenterOfMass();
-    AddConstraint<TARGET_3D>(ikHelper,fm1.frame_,targetPos);
-    AddConstraint<MAINTAIN_COM>(ikHelper);
+    AddConstraint(ikHelper,fm1.frame_,targetPos);
+    AddMaintainCOMConstraint(ikHelper);
     pinocchio::Configuration_t configuration = hyq->currentConfiguration();
     BOOST_CHECK_EQUAL(ikHelper.proj_->apply(configuration), true);
     hyq->currentConfiguration(configuration); hyq->computeForwardKinematics();

@@ -86,7 +86,7 @@ FrameMarker* warpFrameConstructor1(IkHelper& helper, const std::string& frameNam
 
 void add3DConstraint(IkHelper& helper, const FrameMarker& frame, const vector3_t& pos)
 {
-    AddConstraint<TARGET_3D>(helper,frame.frame_,pos);
+    AddConstraint(helper,frame.frame_,pos);
 }
 
 BOOST_PYTHON_MODULE(hppy_ik)
@@ -122,14 +122,9 @@ BOOST_PYTHON_MODULE(hppy_ik)
     def("clearProjector"  , &clearProjector);
 
     /** BEGIN enum types **/
-    enum_<IkConstraintType>("IkConstraintType")
+    enum_<MaintainConstraintType>("MaintainConstraintType")
             .value("MAINTAIN_3D"    , MAINTAIN_3D)
             .value("MAINTAIN_6D"    , MAINTAIN_6D)
-            .value("MAINTAIN_COM"   , MAINTAIN_COM)
-            .value("TARGET_3D"      , TARGET_3D)
-            .value("TARGET_6D"      , TARGET_6D)
-            .value("TARGET_POS_NORM", TARGET_POS_NORM)
-            .value("TARGET_COM"     , TARGET_COM)
             .export_values();
     /** END enum types **/
 }

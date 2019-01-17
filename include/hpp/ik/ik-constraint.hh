@@ -21,7 +21,6 @@
 
 
 #include <hpp/ik/config.hh>
-#include <hpp/ik/hidden.hh>
 #include <hpp/ik/definitions.hh>
 
 #include <hpp/pinocchio/frame.hh>
@@ -34,66 +33,43 @@ namespace hpp {
 namespace ik {
 
 
+template<MaintainConstraintType E>
+void HPP_IK_DLLAPI AddMaintainConstraint
+(IkHelper& ikHelper, const FrameMarker& frame);
+
+void HPP_IK_DLLAPI AddMaintainCOMConstraint(IkHelper& ikHelper);
+
+void HPP_IK_DLLAPI AddConstraint
+(IkHelper& ikHelper, const pinocchio::Frame& frame, const vector3_t& target);
+
+void HPP_IK_DLLAPI AddConstraint
+(IkHelper& ikHelper, const FrameMarker& frame,const vector3_t& posTarget, const vector3_t& normTarget);
+
+void HPP_IK_DLLAPI AddConstraint
+(IkHelper& ikHelper, const FrameMarker& frameMarker, const vector3_t& posTarget, const quat_t& quatTarget);
+
+void HPP_IK_DLLAPI AddCOMConstraint (IkHelper& ikHelper, const vector3_t& target);
+
+
 void HPP_IK_DLLAPI AddPosConstraint  (IkHelper& ikHelper, const pinocchio::Frame &frame, const vector3_t    & positionTarget);
 void HPP_IK_DLLAPI AddRotConstraint  (IkHelper& ikHelper, const pinocchio::Frame& frameMarker, const fcl::Matrix3f& rotationTarget);
-void HPP_IK_DLLAPI AddCOMConstraint  (IkHelper& ikHelper, const vector3_t  & positionTarget);
-
-fcl::Transform3f HPP_IK_DLLAPI computeProjectionMatrix(const FrameMarker& frameMarker, const vector3_t &posTarget, const vector3_t &normTarget);
 
 
 template<>
-inline void HPP_IK_DLLAPI AddConstraint<MAINTAIN_3D>
+inline void HPP_IK_DLLAPI AddMaintainConstraint<MAINTAIN_3D>
 (IkHelper& ikHelper, const FrameMarker& frame)
 {
     hpp::ik::AddPosConstraint(ikHelper,frame.frame_,frame.frame_.currentTransformation().translation());
 }
 
 template<>
-inline void HPP_IK_DLLAPI AddConstraint<MAINTAIN_6D>
+inline void HPP_IK_DLLAPI AddMaintainConstraint<MAINTAIN_6D>
 (IkHelper& ikHelper, const FrameMarker& frame)
 {
     hpp::ik::AddPosConstraint(ikHelper,frame.frame_,frame.frame_.currentTransformation().translation());
     hpp::ik::AddRotConstraint(ikHelper,frame.frame_,frame.frame_.currentTransformation().rotation());
 }
 
-template<>
-inline void HPP_IK_DLLAPI AddConstraint<MAINTAIN_COM>(IkHelper& ikHelper)
-{
-    hpp::ik::AddCOMConstraint(ikHelper, ikHelper.device_->positionCenterOfMass());
-}
-
-template<>
-inline void HPP_IK_DLLAPI AddConstraint<TARGET_3D>
-(IkHelper& ikHelper, const pinocchio::Frame& frame, const vector3_t& target)
-{
-    hpp::ik::AddPosConstraint(ikHelper, frame, target);
-}
-
-template<>
-inline void HPP_IK_DLLAPI AddConstraint<TARGET_POS_NORM>
-(IkHelper& ikHelper, const FrameMarker& frame, const vector3_t& posTarget, const vector3_t& normTarget)
-{
-    fcl::Transform3f pM = hpp::ik::computeProjectionMatrix(frame,posTarget, normTarget);
-    hpp::ik::AddPosConstraint(ikHelper, frame.frame_, pM.getTranslation());
-    hpp::ik::AddRotConstraint(ikHelper, frame.frame_, pM.getRotation());
-}
-
-template<>
-inline void HPP_IK_DLLAPI AddConstraint<TARGET_6D>
-(IkHelper& ikHelper, const FrameMarker& frameMarker, const vector3_t& posTarget, const quat_t& quatTarget)
-{
-    fcl::Matrix3f rotation = quatTarget.toRotationMatrix();
-    fcl::Vec3f posOffset = posTarget - rotation * frameMarker.offset_;
-    hpp::ik::AddPosConstraint(ikHelper, frameMarker.frame_, posOffset);
-    hpp::ik::AddRotConstraint(ikHelper, frameMarker.frame_, rotation);
-}
-
-template<>
-inline void HPP_IK_DLLAPI AddConstraint<TARGET_COM>
-(IkHelper& ikHelper, const vector3_t& target)
-{
-    hpp::ik::AddCOMConstraint(ikHelper, target);
-}
 
 } // namespace hpp
 } // namespace ik

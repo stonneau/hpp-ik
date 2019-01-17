@@ -66,7 +66,43 @@ typedef constraints::CalculusBaseAbstract<PointCom::ValueType_t, PointCom::Jacob
 typedef constraints::SymbolicFunction<s_t> PointComFunction;
 typedef constraints::SymbolicFunction<s_t>::Ptr_t PointComFunctionPtr_t;
 
-void AddCOMConstraint  (IkHelper& ikHelper, const vector3_t  & positionTarget)
+fcl::Transform3f computeProjectionMatrix(const FrameMarker& frameMarker,
+                                         const vector3_t& position, const vector3_t& normal)
+{
+    const fcl::Vec3f z = frameMarker.frame_.currentTransformation().rotation() * frameMarker.normal_;
+    const fcl::Matrix3f alignRotation = GetRotationMatrix(z,normal);
+    hppDout(notice,"alignRotation : \n"<<alignRotation);
+    const fcl::Matrix3f rotation = alignRotation * frameMarker.frame_.currentTransformation().rotation();
+    hppDout(notice,"rotation : \n"<<rotation);
+    fcl::Vec3f posOffset = position - rotation * frameMarker.offset_;
+    posOffset = posOffset + normal * epsilon;
+    return fcl::Transform3f(rotation,posOffset);
+}
+
+void AddConstraint(IkHelper& ikHelper, const pinocchio::Frame& frame, const vector3_t& target)
+{
+    hpp::ik::AddPosConstraint(ikHelper, frame, target);
+}
+
+void AddConstraint
+(IkHelper& ikHelper, const FrameMarker& frame, const vector3_t& posTarget, const vector3_t& normTarget)
+{
+    fcl::Transform3f pM = hpp::ik::computeProjectionMatrix(frame,posTarget, normTarget);
+    hpp::ik::AddPosConstraint(ikHelper, frame.frame_, pM.getTranslation());
+    hpp::ik::AddRotConstraint(ikHelper, frame.frame_, pM.getRotation());
+}
+
+void AddConstraint
+(IkHelper& ikHelper, const FrameMarker& frameMarker, const vector3_t& posTarget, const quat_t& quatTarget)
+{
+    fcl::Matrix3f rotation = quatTarget.toRotationMatrix();
+    fcl::Vec3f posOffset = posTarget - rotation * frameMarker.offset_;
+    hpp::ik::AddPosConstraint(ikHelper, frameMarker.frame_, posOffset);
+    hpp::ik::AddRotConstraint(ikHelper, frameMarker.frame_, rotation);
+}
+
+
+void AddCOMConstraint (IkHelper& ikHelper, const vector3_t& positionTarget)
 {
     pinocchio::DevicePtr_t device = ikHelper.device_;
     pinocchio::CenterOfMassComputationPtr_t comComp = pinocchio::CenterOfMassComputation::create (device);
@@ -80,18 +116,12 @@ void AddCOMConstraint  (IkHelper& ikHelper, const vector3_t  & positionTarget)
     ikHelper.proj_->rightHandSide(comEq,positionTarget);
 }
 
-fcl::Transform3f computeProjectionMatrix(const FrameMarker& frameMarker,
-                                         const vector3_t& position, const vector3_t& normal)
+void AddMaintainCOMConstraint(IkHelper& ikHelper)
 {
-    const fcl::Vec3f z = frameMarker.frame_.currentTransformation().rotation() * frameMarker.normal_;
-    const fcl::Matrix3f alignRotation = GetRotationMatrix(z,normal);
-    hppDout(notice,"alignRotation : \n"<<alignRotation);
-    const fcl::Matrix3f rotation = alignRotation * frameMarker.frame_.currentTransformation().rotation();
-    hppDout(notice,"rotation : \n"<<rotation);
-    fcl::Vec3f posOffset = position - rotation * frameMarker.offset_;
-    posOffset = posOffset + normal * epsilon;
-    return fcl::Transform3f(rotation,posOffset);
+    hpp::ik::AddCOMConstraint(ikHelper, ikHelper.device_->positionCenterOfMass());
 }
+
+
 
 } // namespace hpp
 } // namespace ik

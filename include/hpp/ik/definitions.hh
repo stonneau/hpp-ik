@@ -37,15 +37,10 @@ typedef Eigen::Vector3d vector3_t;
 typedef Eigen::Quaterniond quat_t;
 
 
-enum HPP_IK_DLLAPI IkConstraintType
+enum HPP_IK_DLLAPI MaintainConstraintType
 {
     MAINTAIN_3D = 0,
-    MAINTAIN_6D,
-    MAINTAIN_COM,
-    TARGET_3D,
-    TARGET_6D,
-    TARGET_POS_NORM,
-    TARGET_COM
+    MAINTAIN_6D
 };
 
 struct HPP_IK_DLLAPI IkHelper{
@@ -58,7 +53,7 @@ struct HPP_IK_DLLAPI IkHelper{
                                         | pinocchio::JOINT_POSITION | pinocchio::JACOBIAN | pinocchio::COM));
     }
 
-    IkHelper(){}
+     IkHelper(){}
     ~IkHelper(){}
 
     hpp::pinocchio::DevicePtr_t device_;
