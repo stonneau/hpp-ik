@@ -84,6 +84,17 @@ FrameMarker* warpFrameConstructor1(IkHelper& helper, const std::string& frameNam
     return new FrameMarker(frame);
 }
 
+vector3_t com(IkHelper& helper)
+{
+    return helper.device_->positionCenterOfMass();
+}
+
+
+void    (*target6D)(IkHelper&, const FrameMarker&, const vector3_t&, const quat_t&) = &AddConstraint;
+void    (*targetPosNorm)(IkHelper&, const FrameMarker&, const vector3_t&, const vector3_t&) = &AddConstraint;
+void    (*maintain6D)(IkHelper&, const FrameMarker&) = &AddMaintainConstraint<MAINTAIN_6D>;
+void    (*maintain3D)(IkHelper&, const FrameMarker&) = &AddMaintainConstraint<MAINTAIN_3D>;
+
 void add3DConstraint(IkHelper& helper, const FrameMarker& frame, const vector3_t& pos)
 {
     AddConstraint(helper,frame.frame_,pos);
@@ -93,11 +104,6 @@ BOOST_PYTHON_MODULE(hppy_ik)
 {
     /** BEGIN eigenpy init**/
     eigenpy::enableEigenPy();
-
-    eigenpy::enableEigenPySpecific<vector3_t,vector3_t>();
-    eigenpy::enableEigenPySpecific<vector_t,vector_t>();
-    //eigenpy::exposeAngleAxis();
-    //eigenpy::exposeQuaternion();
 
     /** END eigenpy init**/
     /** BEGIN struct**/
@@ -114,12 +120,24 @@ BOOST_PYTHON_MODULE(hppy_ik)
     ;
     /** END struct**/
 
-    /** methods **/
+    /** BEGIN contraint methods **/
     def("target3D",  &add3DConstraint);
+    def("target6D",  target6D);
+    def("targetPosNorm",  targetPosNorm);
+    def("maintain6D"   ,  maintain6D);
+    def("maintain3D"   ,  maintain3D);
+    def("targetCOM"    ,  &AddCOMConstraint);
+    def("MaintainCOM"  ,  &AddMaintainCOMConstraint);
+    /** END contraint methods **/
+
+    /** BEGIN helper methods **/
     def("setConfig", &setConfig);
     def("getConfig", &getConfig);
     def("project"  , &project);
     def("clearProjector"  , &clearProjector);
+    def("comPos"  , &com);
+    /** END helper methods **/
+
 
     /** BEGIN enum types **/
     enum_<MaintainConstraintType>("MaintainConstraintType")

@@ -35,7 +35,6 @@ SET(PROJECT_URL "https://github.com/stonneau/hpp-ik")
 set (RUN_TESTS TRUE CACHE BOOL "compile and run unit tests")
 
 SET(${PROJECT_NAME}_HEADERS
-  include/hpp/ik/hidden.hh
   include/hpp/ik/ik-constraint.hh
 )
 
